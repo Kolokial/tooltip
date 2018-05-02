@@ -12,18 +12,35 @@ type Position = KolokialTooltipPosition;
 })
 export class KolokialTooltipComponent implements OnInit, OnDestroy {
 
-  @Input() private tooltipDisplay?: Position = KolokialTooltipPosition.Top;
-  @Input() private tooltipAlignment?: Alignment = KolokialTooltipAlignment.Middle;
+  @Input() private set displayPosition(value: 'top' | 'right' | 'bottom' | 'left') {
+    switch (value) {
+      case 'right': this._displayPosition = KolokialTooltipPosition.Right; break;
+      case 'bottom': this._displayPosition = KolokialTooltipPosition.Bottom; break;
+      case 'left': this._displayPosition = KolokialTooltipPosition.Left; break;
+      case 'top':
+      default: this._displayPosition = KolokialTooltipPosition.Top; break;
+    }
+  }
+
+  @Input() private set alignment(value: 'top' | 'bottom' | 'middle' | 'right' | 'left') {
+    switch (value) {
+      case 'top': this._alignment = KolokialTooltipAlignment.Top; break;
+      case 'bottom': this._alignment = KolokialTooltipAlignment.Bottom; break;
+      case 'right': this._alignment = KolokialTooltipAlignment.Right; break;
+      case 'left': this._alignment = KolokialTooltipAlignment.Left; break;
+      case 'middle':
+      default: this._alignment = KolokialTooltipAlignment.Middle; break;
+    }
+  }
+
   @Input() private set templateKey(value: string) {
     this._key = value;
     this.tooltipService.registerTemplate(value, this);
   }
 
-  private get templateKey(): string {
-    return this._key;
-  }
-
   private _key: string;
+  private _displayPosition: Position = KolokialTooltipPosition.Top;
+  private _alignment: Alignment = KolokialTooltipAlignment.Middle;
 
   @ContentChild(TemplateRef) private templateVariable: TemplateRef<any>;
 
@@ -56,11 +73,11 @@ export class KolokialTooltipComponent implements OnInit, OnDestroy {
 
   }
 
-  private setPositionRight(): void{
+  private setPositionRight(): void {
 
   }
 
-  private setPositionleft(): void{
+  private setPositionleft(): void {
 
   }
 
