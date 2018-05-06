@@ -12,40 +12,31 @@ type Position = KolokialTooltipPosition;
 })
 export class KolokialTooltipComponent implements OnInit, OnDestroy {
 
-  @Input() private set displayPosition(value: 'top' | 'right' | 'bottom' | 'left') {
-    switch (value) {
-      case 'right': this._displayPosition = KolokialTooltipPosition.Right; break;
-      case 'bottom': this._displayPosition = KolokialTooltipPosition.Bottom; break;
-      case 'left': this._displayPosition = KolokialTooltipPosition.Left; break;
-      case 'top':
-      default: this._displayPosition = KolokialTooltipPosition.Top; break;
-    }
-  }
-
-  @Input() private set alignment(value: 'top' | 'bottom' | 'middle' | 'right' | 'left') {
-    switch (value) {
-      case 'top': this._alignment = KolokialTooltipAlignment.Top; break;
-      case 'bottom': this._alignment = KolokialTooltipAlignment.Bottom; break;
-      case 'right': this._alignment = KolokialTooltipAlignment.Right; break;
-      case 'left': this._alignment = KolokialTooltipAlignment.Left; break;
-      case 'middle':
-      default: this._alignment = KolokialTooltipAlignment.Middle; break;
-    }
-  }
-
-  @Input() private set templateKey(value: string) {
-    this._key = value;
-    this.tooltipService.registerTemplate(value, this);
-  }
-
   private _key: string;
   private _displayPosition: Position = KolokialTooltipPosition.Top;
   private _alignment: Alignment = KolokialTooltipAlignment.Middle;
+  private _text: string;
 
   private alignments = KolokialTooltipAlignment;
   private positions = KolokialTooltipPosition;
 
+  private position: { [key: string]: number } = {
+    top: 20,
+    right: 20,
+    bottom: 20,
+    left: 20,
+  };
+
   @ContentChild(TemplateRef) private templateVariable: TemplateRef<any>;
+
+  @Input() public set templateKey(value: string) {
+    this._key = value;
+    this.tooltipService.registerTemplate(value, this);
+  }
+
+  @Input() public set text(value: string) {
+    this._text = value;
+  }
 
   constructor(private tooltipService: KolokialTooltipService) { }
 
@@ -93,7 +84,7 @@ export class KolokialTooltipComponent implements OnInit, OnDestroy {
     const alignments: Alignment[] = [];
     if (this._displayPosition === this.positions.Top || this._displayPosition === this.positions.Bottom) {
       alignments.push(this.alignments.Right, this.alignments.Left, this.alignments.Middle);
-    } else if (this._displayPosition === this.positions.Left || this._displayPosition === this.positions.Right){
+    } else if (this._displayPosition === this.positions.Left || this._displayPosition === this.positions.Right) {
       alignments.push(this.alignments.Top, this.alignments.Bottom, this.alignments.Middle);
     }
 

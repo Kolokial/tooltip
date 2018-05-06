@@ -1,5 +1,5 @@
 import { BrowserModule } from '@angular/platform-browser';
-import { NgModule } from '@angular/core';
+import { NgModule, ComponentFactory, ComponentFactoryResolver } from '@angular/core';
 
 
 import { AppComponent } from './app.component';
@@ -13,6 +13,9 @@ import { KolokialTooltipService } from './component/kolokial-tooltip/kolokial-to
     AppComponent,
     KolokialTooltipComponent,
     KolokialTooltipDirective
+  ],
+  entryComponents: [
+    KolokialTooltipComponent
   ],
   imports: [
     BrowserModule
