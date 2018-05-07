@@ -1,8 +1,12 @@
-<div class='kolokial-tooltip-container'
+<div #tooltipContainer class='kolokial-tooltip-container'
   [style.top.px]='position.top'
   [style.right.px]='position.right'
   [style.bottom.px]='position.bottom'
   [style.left.px]='position.left'
+  [ngClass]='{
+    "kolokial-show-tooltip": visibility === true,
+    "kolokial-hide-tooltip": visibility === false
+  }'
 >
   <div *ngIf='!text' class='kolokial-tooltip'>
       <ng-container *ngTemplateOutlet="templateVariable"></ng-container>

@@ -2,4 +2,12 @@
     position: fixed;
     bottom: 200%;
     left:-1;
+    display: inline;
+}
+
+.kolokial-tooltip-container.kolokial-show-tooltip{
+    display: block;
+}
+.kolokial-tooltip-container.kolokial-hide-tooltip{
+    display: none;
 }
