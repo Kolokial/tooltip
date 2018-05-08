@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewChild, TemplateRef, ContentChild, Input, OnDestroy, ElementRef } from '@angular/core';
 import { KolokialTooltipService } from './kolokial-tooltip.service';
 import { KolokialTooltipAlignment, KolokialTooltipPosition } from './kolokial-tooltip.enum';
-import { StringifyOptions } from 'querystring';
+import { Dimensions } from './Ikolokial-tooltip';
 
 type Alignment = KolokialTooltipAlignment;
 type Position = KolokialTooltipPosition;
@@ -14,7 +14,7 @@ type Position = KolokialTooltipPosition;
 export class KolokialTooltipComponent implements OnInit, OnDestroy {
 
   private _key: string;
-  private _displayPosition: Position = KolokialTooltipPosition.Top;
+  private _displayPosition: Position = KolokialTooltipPosition.Right;
   private _alignment: Alignment = KolokialTooltipAlignment.Middle;
   private _text: string;
 
@@ -30,6 +30,9 @@ export class KolokialTooltipComponent implements OnInit, OnDestroy {
   };
 
   private tooltipDimensions: ClientRect;
+  private viewPortDimensions: Dimensions;
+  private hostDimensions: Dimensions;
+  private hostPosition: ClientRect;
   private hostLeft: number;
   private hostTop: number;
   private offset = 15;
@@ -60,103 +63,114 @@ export class KolokialTooltipComponent implements OnInit, OnDestroy {
     this.tooltipService.unRegisterTemplate(this._key);
 
   }
-  public show(hostDimension: ClientRect): void {
+  public show(hostPosition: ClientRect): void {
     this.visibility = true;
-    this.setPosition(hostDimension);
+    this.hostPosition = hostPosition;
+    this.setPosition();
   }
 
   public hide(): void {
     this.visibility = false;
   }
 
-  private setPosition(hostPosition: ClientRect): void {
-    if (hostPosition.left !== this.hostLeft || hostPosition.top !== this.hostTop) {
-      const tooltipDimensions: ClientRect = this.getTooltipDimensions();
-      const viewPortDimensions = this.getViewPortDimensions();
+  private setPosition(): void {
+    if (this.hostPosition.left !== this.hostLeft || this.hostPosition.top !== this.hostTop) {
+      this.tooltipDimensions = this.getTooltipDimensions();
+      this.viewPortDimensions = this.getViewPortDimensions();
+      this.hostDimensions = this.getHostDimensions();
       switch (this._displayPosition) {
-        case this.positions.Top: this.setPositionTop(hostPosition, viewPortDimensions, tooltipDimensions); break;
-        case this.positions.Right: this.setPositionRight(hostPosition, viewPortDimensions, tooltipDimensions); break;
-        case this.positions.Bottom: this.setPositionBottom(hostPosition, viewPortDimensions, tooltipDimensions); break;
-        case this.positions.Left: this.setPositionLeft(hostPosition, viewPortDimensions, tooltipDimensions); break;
+        case this.positions.Top: this.setPositionTop(); break;
+        case this.positions.Right: this.setPositionRight(); break;
+        case this.positions.Bottom: this.setPositionBottom(); break;
+        case this.positions.Left: this.setPositionLeft(); break;
       }
 
-      this.hostLeft = hostPosition.left;
-      this.hostTop = hostPosition.top;
+      this.hostLeft = this.hostPosition.left;
+      this.hostTop = this.hostPosition.top;
     }
   }
 
-  private setPositionTop(hostPosition: ClientRect, viewPort, tooltipDimensions: ClientRect): void {
-    this.position.bottom = Math.floor(viewPort.height - (hostPosition.top - 15));
-    this.position.top = hostPosition.top - 15 - tooltipDimensions.height;
+  private setPositionTop(): void {
+    this.position.bottom = Math.floor(this.viewPortDimensions.height - (this.hostPosition.top - 15));
+    this.position.top = this.hostPosition.top - 15 - this.tooltipDimensions.height;
 
     if (this.position.top < 0) {
-      this.setPositionBottom(hostPosition, viewPort, tooltipDimensions);
+      this.setPositionBottom();
       return;
     }
-
+    this.setAlignment(this._alignment, this.positions.Top);
   }
 
-  private setPositionBottom(hostPosition: ClientRect, viewPort, tooltipDimensions: ClientRect): void {
-    this.position.top = hostPosition.bottom + 15;
-    this.position.bottom = Math.floor(viewPort.height - (hostPosition.bottom + 15 + tooltipDimensions.height));
+  private setPositionBottom(): void {
+    this.position.top = Math.floor(this.hostPosition.bottom + this.offset);
+    this.position.bottom = Math.floor(this.viewPortDimensions.height - (this.hostPosition.bottom + 15 + this.tooltipDimensions.height));
 
     if (this.position.bottom < 0) {
-      this.setPositionTop(hostPosition, viewPort, tooltipDimensions);
+      this.setPositionTop();
       return;
     }
+    this.setAlignment(this._alignment, this.positions.Bottom);
+  }
+
+  private setPositionRight(): void {
+    this.position.left = Math.floor(this.hostPosition.right + this.offset);
+    this.position.right = Math.floor(this.viewPortDimensions.width - (this.position.left + this.tooltipDimensions.width));
+
+    if (this.position.right < 0) {
+      this.setPositionLeft();
+      return;
+    }
+    this.setAlignment(this._alignment, this.positions.Right);
+  }
+
+  private setPositionLeft(): void {
 
   }
 
-  private setPositionRight(hostPosition: ClientRect, viewPortDimensions, tooltipDimensions: ClientRect): void {
-
-  }
-
-  private setPositionLeft(hostPosition: ClientRect, viewPortDimensions, tooltipDimensions: ClientRect): void {
-
-  }
-
-  private setAlignment(alignment: Alignment): void {
+  private setAlignment(alignment: Alignment, position: Position): void {
     switch (alignment) {
-      case this.alignments.Top:
-
-        break;
-      case this.alignments.Bottom:
-
-        break;
+      case this.alignments.Top: this.setAlignmentTop(); break;
+      case this.alignments.Bottom: this.setAlignmentBottom(); break;
       case this.alignments.Middle:
-
+        if (position === this.positions.Top || position === this.positions.Bottom) {
+          this.setAlignmentHorizontalMiddle();
+        } else if (position === this.positions.Left || position === this.positions.Right) {
+          this.setAlignmentVerticalMiddle();
+        }
         break;
-      case this.alignments.Left:
-
-        break;
-      case this.alignments.Right:
-
-        break;
+      case this.alignments.Left: this.setAlignmentLeft(); break;
+      case this.alignments.Right: this.setAlignmentRight(); break;
     }
   }
 
   private setAlignmentTop(): void {
-
+    this.position.top = Math.floor(this.hostPosition.top);
+    this.position.bottom = Math.floor(this.viewPortDimensions.height -  (this.position.top + this.tooltipDimensions.height));
   }
 
   private setAlignmentBottom(): void {
-
+    this.position.top = Math.floor(this.hostPosition.bottom - this.tooltipDimensions.height);
+    this.position.bottom = Math.floor(this.viewPortDimensions.height - (this.hostPosition.bottom));
   }
 
   private setAlignmentVerticalMiddle(): void {
-
+    this.position.top = Math.floor((this.hostPosition.top + (this.hostDimensions.height / 2)) - (this.tooltipDimensions.height / 2));
+    this.position.bottom = Math.floor(this.viewPortDimensions.height - (this.position.top + this.tooltipDimensions.height));
   }
 
-  private setAlignmentHorizontalMididle(): void {
-
+  private setAlignmentHorizontalMiddle(): void {
+    this.position.left = Math.floor(this.hostPosition.left + (this.hostPosition.width / 2)) - (this.tooltipDimensions.width / 2);
+    this.position.right = Math.floor(this.viewPortDimensions.width - (this.position.left + this.tooltipDimensions.width));
   }
 
   private setAlignmentLeft(): void {
-
+    this.position.left = Math.floor(this.hostPosition.left);
+    this.position.right = Math.floor(this.viewPortDimensions.width - (this.position.left + this.tooltipDimensions.width));
   }
 
   private setAlignmentRight(): void {
-
+    this.position.left = Math.floor(this.hostPosition.right - this.tooltipDimensions.width);
+    this.position.right = Math.floor(this.viewPortDimensions.width - (this.hostPosition.right));
   }
 
   private getTooltipDimensions(): ClientRect {
@@ -166,10 +180,17 @@ export class KolokialTooltipComponent implements OnInit, OnDestroy {
     return this.tooltipDimensions = this.tooltipContainer.nativeElement.getBoundingClientRect();
   }
 
-  private getViewPortDimensions() {
+  private getViewPortDimensions(): Dimensions {
     return {
       height: window.innerHeight,
       width: window.innerWidth
+    };
+  }
+
+  private getHostDimensions(): Dimensions {
+    return {
+      height: Math.floor(this.hostPosition.bottom - this.hostPosition.top),
+      width: Math.floor(this.hostPosition.right - this.hostPosition.left)
     };
   }
 

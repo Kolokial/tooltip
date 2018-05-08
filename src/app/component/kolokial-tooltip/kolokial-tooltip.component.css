@@ -3,6 +3,7 @@
     bottom: 200%;
     left:-1;
     display: inline;
+    max-width: 200px;
 }
 
 .kolokial-tooltip-container.kolokial-show-tooltip{
