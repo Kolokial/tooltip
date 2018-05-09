@@ -98,9 +98,14 @@ export class KolokialTooltipComponent implements OnInit, OnDestroy {
       this.setPositionBottom();
       return;
     }
-    if (!this.setBestPossibleAlignment(this.positions.Top)) {
+
+    const alignment: CSSPosition = this.getBestPossibleAlignment(this.positions.Top);
+    if (!alignment) {
       this.setPositionRight();
+      return;
     }
+    this.position.left = alignment.left;
+    this.position.right = alignment.right;
   }
 
   private setPositionBottom(): void {
@@ -111,9 +116,14 @@ export class KolokialTooltipComponent implements OnInit, OnDestroy {
       this.setPositionTop();
       return;
     }
-    if (!this.setBestPossibleAlignment(this.positions.Bottom)) {
+
+    const alignment: CSSPosition = this.getBestPossibleAlignment(this.positions.Bottom);
+    if (!alignment) {
       this.setPositionLeft();
+      return;
     }
+    this.position.left = alignment.left;
+    this.position.right = alignment.right;
   }
 
   private setPositionRight(): void {
@@ -124,9 +134,14 @@ export class KolokialTooltipComponent implements OnInit, OnDestroy {
       this.setPositionLeft();
       return;
     }
-    if (!this.setBestPossibleAlignment(this.positions.Right)) {
+
+    const alignment: CSSPosition = this.getBestPossibleAlignment(this.positions.Right);
+    if (!alignment) {
       this.setPositionBottom();
+      return;
     }
+    this.position.top = alignment.top;
+    this.position.bottom = alignment.bottom;
   }
 
   private setPositionLeft(): void {
@@ -138,70 +153,88 @@ export class KolokialTooltipComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (!this.setBestPossibleAlignment(this.positions.Left)) {
+    const alignment: CSSPosition = this.getBestPossibleAlignment(this.positions.Left);
+    if (!alignment) {
       this.setPositionTop();
+      return;
     }
+
+    this.position.top = alignment.top;
+    this.position.bottom = alignment.bottom;
   }
 
-  private setBestPossibleAlignment(position: Position): boolean {
+  private getBestPossibleAlignment(position: Position): CSSPosition {
     let overrideAlignment;
     const alignments: Alignment[] = this.getUnusedAlignments(position);
+    let alignment: CSSPosition;
     do {
-      this.setAlignment(position, overrideAlignment);
-      if (this.isAlignmentValid()) {
-        return true;
+      alignment = this.getAlignment(position, overrideAlignment);
+      if (this.isAlignmentValid(alignment)) {
+        return alignment;
       } else {
         overrideAlignment = alignments.pop();
       }
     } while (overrideAlignment !== undefined);
-    return false;
+    return;
   }
 
-  private setAlignment(position: Position, overridingAlignment: Alignment): void {
+  private getAlignment(position: Position, overridingAlignment: Alignment): CSSPosition {
     const alignment = (!overridingAlignment) ? this._alignment : overridingAlignment;
     switch (alignment) {
-      case this.alignments.Top: this.setAlignmentTop(); break;
-      case this.alignments.Bottom: this.setAlignmentBottom(); break;
+      case this.alignments.Top: return this.setAlignmentTop(); break;
+      case this.alignments.Bottom: return this.setAlignmentBottom(); break;
       case this.alignments.Middle:
         if (position === this.positions.Top || position === this.positions.Bottom) {
-          this.setAlignmentHorizontalMiddle();
+          return this.setAlignmentHorizontalMiddle();
         } else if (position === this.positions.Left || position === this.positions.Right) {
-          this.setAlignmentVerticalMiddle();
+          return this.setAlignmentVerticalMiddle();
         }
         break;
-      case this.alignments.Left: this.setAlignmentLeft(); break;
-      case this.alignments.Right: this.setAlignmentRight(); break;
+      case this.alignments.Left: return this.setAlignmentLeft(); break;
+      case this.alignments.Right: return this.setAlignmentRight(); break;
     }
   }
 
-  private setAlignmentTop(): void {
-    this.position.top = Math.floor(this.hostPosition.top);
-    this.position.bottom = Math.floor(this.viewPortDimensions.height - (this.position.top + this.tooltipDimensions.height));
+  private setAlignmentTop(): CSSPosition {
+    return {
+      top: Math.floor(this.hostPosition.top),
+      bottom: Math.floor(this.viewPortDimensions.height - (this.position.top + this.tooltipDimensions.height))
+    };
   }
 
-  private setAlignmentBottom(): void {
-    this.position.top = Math.floor(this.hostPosition.bottom - this.tooltipDimensions.height);
-    this.position.bottom = Math.floor(this.viewPortDimensions.height - (this.hostPosition.bottom));
+  private setAlignmentBottom(): CSSPosition {
+    return {
+      top: Math.floor(this.hostPosition.bottom - this.tooltipDimensions.height),
+      bottom: Math.floor(this.viewPortDimensions.height - (this.hostPosition.bottom))
+    };
   }
 
-  private setAlignmentVerticalMiddle(): void {
-    this.position.top = Math.floor((this.hostPosition.top + (this.hostDimensions.height / 2)) - (this.tooltipDimensions.height / 2));
-    this.position.bottom = Math.floor(this.viewPortDimensions.height - (this.position.top + this.tooltipDimensions.height));
+  private setAlignmentVerticalMiddle(): CSSPosition {
+    return {
+      top: Math.floor((this.hostPosition.top + (this.hostDimensions.height / 2)) - (this.tooltipDimensions.height / 2)),
+      bottom: Math.floor(this.viewPortDimensions.height - (this.position.top + this.tooltipDimensions.height))
+    };
   }
 
-  private setAlignmentHorizontalMiddle(): void {
-    this.position.left = Math.floor(this.hostPosition.left + (this.hostPosition.width / 2)) - (this.tooltipDimensions.width / 2);
-    this.position.right = Math.floor(this.viewPortDimensions.width - (this.position.left + this.tooltipDimensions.width));
+  private setAlignmentHorizontalMiddle(): CSSPosition {
+    return {
+      left: Math.floor(this.hostPosition.left + (this.hostPosition.width / 2)) - (this.tooltipDimensions.width / 2),
+      right: Math.floor(this.viewPortDimensions.width - (this.position.left + this.tooltipDimensions.width))
+    };
   }
 
-  private setAlignmentLeft(): void {
-    this.position.left = Math.floor(this.hostPosition.left);
-    this.position.right = Math.floor(this.viewPortDimensions.width - (this.position.left + this.tooltipDimensions.width));
+  private setAlignmentLeft(): CSSPosition {
+    return {
+      left: Math.floor(this.hostPosition.left),
+      right: Math.floor(this.viewPortDimensions.width - (this.position.left + this.tooltipDimensions.width))
+    };
   }
 
-  private setAlignmentRight(): void {
-    this.position.left = Math.floor(this.hostPosition.right - this.tooltipDimensions.width);
-    this.position.right = Math.floor(this.viewPortDimensions.width - (this.hostPosition.right));
+  private setAlignmentRight(): CSSPosition {
+    return {
+      left: Math.floor(this.hostPosition.right - this.tooltipDimensions.width),
+      right: Math.floor(this.viewPortDimensions.width - (this.hostPosition.right))
+    };
   }
 
   private getTooltipDimensions(): ClientRect {
@@ -239,8 +272,15 @@ export class KolokialTooltipComponent implements OnInit, OnDestroy {
     });
   }
 
-  private isAlignmentValid(): boolean {
-    return !(this.position.top < 0 || this.position.bottom < 0 || this.position.left < 0 || this.position.right < 0);
+  private isAlignmentValid(position: CSSPosition): boolean {
+    if (position.top < 0 || position.bottom < 0) {
+      return false;
+    }
+
+    if (position.right < 0 || position.left < 0) {
+      return false;
+    }
+    return true;
   }
 
 }
