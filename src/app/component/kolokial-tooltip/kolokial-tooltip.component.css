@@ -4,6 +4,11 @@
     left:-1;
     display: inline;
     max-width: 200px;
+    background-color: DarkTurquoise ;
+    padding:10px;
+    color: black;
+    border-radius: 4px;
+    box-shadow: 3px 3px 3px;
 }
 
 .kolokial-tooltip-container.kolokial-show-tooltip{

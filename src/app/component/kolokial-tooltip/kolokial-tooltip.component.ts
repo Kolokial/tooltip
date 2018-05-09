@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewChild, TemplateRef, ContentChild, Input, OnDestroy, ElementRef } from '@angular/core';
 import { KolokialTooltipService } from './kolokial-tooltip.service';
 import { KolokialTooltipAlignment, KolokialTooltipPosition } from './kolokial-tooltip.enum';
-import { Dimensions } from './Ikolokial-tooltip';
+import { Dimensions, CSSPosition } from './Ikolokial-tooltip';
 
 type Alignment = KolokialTooltipAlignment;
 type Position = KolokialTooltipPosition;
@@ -14,15 +14,15 @@ type Position = KolokialTooltipPosition;
 export class KolokialTooltipComponent implements OnInit, OnDestroy {
 
   private _key: string;
-  private _displayPosition: Position = KolokialTooltipPosition.Right;
-  private _alignment: Alignment = KolokialTooltipAlignment.Middle;
+  private _displayPosition: Position = KolokialTooltipPosition.Bottom;
+  private _alignment: Alignment = KolokialTooltipAlignment.Right;
   private _text: string;
 
   private alignments = KolokialTooltipAlignment;
   private positions = KolokialTooltipPosition;
 
   private visibility: boolean;
-  private position: { [key: string]: number } = {
+  private position: CSSPosition = {
     top: null,
     right: null,
     bottom: null,
@@ -98,7 +98,9 @@ export class KolokialTooltipComponent implements OnInit, OnDestroy {
       this.setPositionBottom();
       return;
     }
-    this.setAlignment(this._alignment, this.positions.Top);
+    if (!this.setBestPossibleAlignment(this.positions.Top)) {
+      this.setPositionRight();
+    }
   }
 
   private setPositionBottom(): void {
@@ -109,7 +111,9 @@ export class KolokialTooltipComponent implements OnInit, OnDestroy {
       this.setPositionTop();
       return;
     }
-    this.setAlignment(this._alignment, this.positions.Bottom);
+    if (!this.setBestPossibleAlignment(this.positions.Bottom)) {
+      this.setPositionLeft();
+    }
   }
 
   private setPositionRight(): void {
@@ -120,14 +124,41 @@ export class KolokialTooltipComponent implements OnInit, OnDestroy {
       this.setPositionLeft();
       return;
     }
-    this.setAlignment(this._alignment, this.positions.Right);
+    if (!this.setBestPossibleAlignment(this.positions.Right)) {
+      this.setPositionBottom();
+    }
   }
 
   private setPositionLeft(): void {
+    this.position.left = Math.floor(this.hostPosition.left - (this.tooltipDimensions.width + this.offset));
+    this.position.right = Math.floor(this.viewPortDimensions.width - (this.hostPosition.left + this.offset));
 
+    if (this.position.left < 0) {
+      this.setPositionRight();
+      return;
+    }
+
+    if (!this.setBestPossibleAlignment(this.positions.Left)) {
+      this.setPositionTop();
+    }
   }
 
-  private setAlignment(alignment: Alignment, position: Position): void {
+  private setBestPossibleAlignment(position: Position): boolean {
+    let overrideAlignment;
+    const alignments: Alignment[] = this.getUnusedAlignments(position);
+    do {
+      this.setAlignment(position, overrideAlignment);
+      if (this.isAlignmentValid()) {
+        return true;
+      } else {
+        overrideAlignment = alignments.pop();
+      }
+    } while (overrideAlignment !== undefined);
+    return false;
+  }
+
+  private setAlignment(position: Position, overridingAlignment: Alignment): void {
+    const alignment = (!overridingAlignment) ? this._alignment : overridingAlignment;
     switch (alignment) {
       case this.alignments.Top: this.setAlignmentTop(); break;
       case this.alignments.Bottom: this.setAlignmentBottom(); break;
@@ -145,7 +176,7 @@ export class KolokialTooltipComponent implements OnInit, OnDestroy {
 
   private setAlignmentTop(): void {
     this.position.top = Math.floor(this.hostPosition.top);
-    this.position.bottom = Math.floor(this.viewPortDimensions.height -  (this.position.top + this.tooltipDimensions.height));
+    this.position.bottom = Math.floor(this.viewPortDimensions.height - (this.position.top + this.tooltipDimensions.height));
   }
 
   private setAlignmentBottom(): void {
@@ -194,17 +225,22 @@ export class KolokialTooltipComponent implements OnInit, OnDestroy {
     };
   }
 
-  private getUnusedAlignments() {
+  private getUnusedAlignments(overridingPosition?: Position): Alignment[] {
+    const position: Position = (overridingPosition) ? overridingPosition : this._displayPosition;
     const alignments: Alignment[] = [];
-    if (this._displayPosition === this.positions.Top || this._displayPosition === this.positions.Bottom) {
+    if (position === this.positions.Top || position === this.positions.Bottom) {
       alignments.push(this.alignments.Right, this.alignments.Left, this.alignments.Middle);
-    } else if (this._displayPosition === this.positions.Left || this._displayPosition === this.positions.Right) {
+    } else if (position === this.positions.Left || position === this.positions.Right) {
       alignments.push(this.alignments.Top, this.alignments.Bottom, this.alignments.Middle);
     }
 
     return alignments.filter((alignment: Alignment) => {
       return !(this._alignment === alignment);
     });
+  }
+
+  private isAlignmentValid(): boolean {
+    return !(this.position.top < 0 || this.position.bottom < 0 || this.position.left < 0 || this.position.right < 0);
   }
 
 }
