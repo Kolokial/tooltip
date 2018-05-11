@@ -181,8 +181,8 @@ export class KolokialTooltipComponent implements OnInit, OnDestroy {
   private getAlignment(position: Position, overridingAlignment: Alignment): CSSPosition {
     const alignment = (!overridingAlignment) ? this._alignment : overridingAlignment;
     switch (alignment) {
-      case this.alignments.Top: return this.setAlignmentTop(); break;
-      case this.alignments.Bottom: return this.setAlignmentBottom(); break;
+      case this.alignments.Top: return this.setAlignmentTop();
+      case this.alignments.Bottom: return this.setAlignmentBottom();
       case this.alignments.Middle:
         if (position === this.positions.Top || position === this.positions.Bottom) {
           return this.setAlignmentHorizontalMiddle();
@@ -190,15 +190,15 @@ export class KolokialTooltipComponent implements OnInit, OnDestroy {
           return this.setAlignmentVerticalMiddle();
         }
         break;
-      case this.alignments.Left: return this.setAlignmentLeft(); break;
-      case this.alignments.Right: return this.setAlignmentRight(); break;
+      case this.alignments.Left: return this.setAlignmentLeft();
+      case this.alignments.Right: return this.setAlignmentRight();
     }
   }
 
   private setAlignmentTop(): CSSPosition {
     return {
       top: Math.floor(this.hostPosition.top),
-      bottom: Math.floor(this.viewPortDimensions.height - (this.position.top + this.tooltipDimensions.height))
+      bottom: Math.floor(this.viewPortDimensions.height - (this.hostPosition.top + this.tooltipDimensions.height))
     };
   }
 
@@ -210,23 +210,27 @@ export class KolokialTooltipComponent implements OnInit, OnDestroy {
   }
 
   private setAlignmentVerticalMiddle(): CSSPosition {
+    const hostHalfHeight: number = this.hostPosition.height / 2;
     return {
-      top: Math.floor((this.hostPosition.top + (this.hostDimensions.height / 2)) - (this.tooltipDimensions.height / 2)),
-      bottom: Math.floor(this.viewPortDimensions.height - (this.position.top + this.tooltipDimensions.height))
+      top: Math.floor((this.hostPosition.top + hostHalfHeight) - (this.tooltipDimensions.height / 2)),
+      bottom: Math.floor(this.viewPortDimensions.height - ((this.hostPosition.top + hostHalfHeight) + this.tooltipDimensions.height))
     };
   }
 
   private setAlignmentHorizontalMiddle(): CSSPosition {
+    const viewPortWidth: number = this.viewPortDimensions.width;
+    const hostRight: number = this.hostPosition.right;
+    const hostHalfWidth: number = this.hostDimensions.width / 2;
     return {
-      left: Math.floor(this.hostPosition.left + (this.hostPosition.width / 2)) - (this.tooltipDimensions.width / 2),
-      right: Math.floor(this.viewPortDimensions.width - (this.position.left + this.tooltipDimensions.width))
+      left: Math.floor((this.hostPosition.left + hostHalfWidth) - (this.tooltipDimensions.width / 2)),
+      right: Math.floor(((viewPortWidth - hostRight) - hostHalfWidth + (this.tooltipDimensions.width / 2)))
     };
   }
 
   private setAlignmentLeft(): CSSPosition {
     return {
       left: Math.floor(this.hostPosition.left),
-      right: Math.floor(this.viewPortDimensions.width - (this.position.left + this.tooltipDimensions.width))
+      right: Math.floor(this.viewPortDimensions.width - (this.hostPosition.left + this.tooltipDimensions.width))
     };
   }
 
