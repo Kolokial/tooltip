@@ -61,8 +61,8 @@ export class KolokialTooltipComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.tooltipService.unRegisterTemplate(this._key);
-
   }
+  
   public show(hostPosition: ClientRect): void {
     this.visibility = true;
     this.hostPosition = hostPosition;
@@ -128,7 +128,7 @@ export class KolokialTooltipComponent implements OnInit, OnDestroy {
 
   private setPositionRight(): void {
     this.position.left = Math.floor(this.hostPosition.right + this.offset);
-    this.position.right = Math.floor(this.viewPortDimensions.width - (this.position.left + this.tooltipDimensions.width));
+    this.position.right = Math.floor(this.viewPortDimensions.width - (this.position.left + this.offset + this.tooltipDimensions.width));
 
     if (this.position.right < 0) {
       this.setPositionLeft();
@@ -146,7 +146,7 @@ export class KolokialTooltipComponent implements OnInit, OnDestroy {
 
   private setPositionLeft(): void {
     this.position.left = Math.floor(this.hostPosition.left - (this.tooltipDimensions.width + this.offset));
-    this.position.right = Math.floor(this.viewPortDimensions.width - (this.hostPosition.left + this.offset));
+    this.position.right = Math.floor(this.viewPortDimensions.width - (this.hostPosition.left - this.offset));
 
     if (this.position.left < 0) {
       this.setPositionRight();
@@ -178,8 +178,8 @@ export class KolokialTooltipComponent implements OnInit, OnDestroy {
     return;
   }
 
-  private getAlignment(position: Position, overridingAlignment: Alignment): CSSPosition {
-    const alignment = (!overridingAlignment) ? this._alignment : overridingAlignment;
+  private getAlignment(position: Position, overridingAlignment?: Alignment): CSSPosition {
+    const alignment = (overridingAlignment !== undefined) ? overridingAlignment : this._alignment;
     switch (alignment) {
       case this.alignments.Top: return this.setAlignmentTop();
       case this.alignments.Bottom: return this.setAlignmentBottom();
@@ -213,7 +213,7 @@ export class KolokialTooltipComponent implements OnInit, OnDestroy {
     const hostHalfHeight: number = this.hostPosition.height / 2;
     return {
       top: Math.floor((this.hostPosition.top + hostHalfHeight) - (this.tooltipDimensions.height / 2)),
-      bottom: Math.floor(this.viewPortDimensions.height - ((this.hostPosition.top + hostHalfHeight) + this.tooltipDimensions.height))
+      bottom: Math.floor(this.viewPortDimensions.height - ((this.hostPosition.top + hostHalfHeight) + (this.tooltipDimensions.height / 2)))
     };
   }
 
@@ -263,7 +263,7 @@ export class KolokialTooltipComponent implements OnInit, OnDestroy {
   }
 
   private getUnusedAlignments(overridingPosition?: Position): Alignment[] {
-    const position: Position = (overridingPosition) ? overridingPosition : this._displayPosition;
+    const position: Position = (overridingPosition !== undefined) ? overridingPosition : this._displayPosition;
     const alignments: Alignment[] = [];
     if (position === this.positions.Top || position === this.positions.Bottom) {
       alignments.push(this.alignments.Right, this.alignments.Left, this.alignments.Middle);
